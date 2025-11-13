@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 )
 
@@ -24,4 +25,16 @@ func openLogFile() *os.File {
 		panic(err)
 	}
 	return file
+}
+
+func ListenPort(port int) (net.Listener, int) {
+	if port < 0 {
+		return nil, -1
+	}
+	portString := fmt.Sprintf(":%d", port)
+	listener, err := net.Listen("tcp", portString)
+	if err != nil {
+		panic(err)
+	}
+	return listener, 0
 }
