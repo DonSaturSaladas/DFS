@@ -5,40 +5,17 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
 )
 
 var port int = 5000
 var logger *log.Logger
 
 func main() {
-	listener := startServer()
+	listener, logger := utils.StartServer(port, "NAMENODE")
 	for {
-		conn := acceptConnection(listener)
+		conn := utils.AcceptConnection(listener, logger)
 		go handleConnection(conn)
 	}
-}
-
-func startServer() net.Listener {
-	logger = utils.CreateLogger("NAMENODE")
-	listener, err := utils.ListenPort(port)
-	if err != 0 {
-		error_string := fmt.Sprintf("ERROR: No se pudo escuchar en el puerto %d\n", port)
-		logger.Print(error_string)
-		panic(error_string)
-	}
-	logger.Printf("INFO: Iniciado el servidor, escuchando el puerto %d\n", port)
-	return listener
-}
-
-func acceptConnection(listener net.Listener) net.Conn {
-	conn, err := listener.Accept()
-	if err != nil {
-		error_string := "ERROR: No se pudo aceptar la conexion\n"
-		logger.Print(error_string)
-		panic(error_string)
-	}
-	return conn
 }
 
 func handleConnection(conn net.Conn) {
@@ -53,45 +30,31 @@ func handleConnection(conn net.Conn) {
 		Ls:  "ls",
 	}
 	buffer := make([]byte, 256)
-	commandsMap := map[string]func(){
+	commandsMap := map[string]func(string){
 		commands.Get: getCommand,
 		commands.Put: putCommand,
 		commands.Ls:  lsCommand,
 	}
 
 	for {
-		readedBytes := readMessage(conn, buffer)
-		commandString := strings.TrimSpace(string(buffer[:readedBytes]))
-		fmt.Printf("Comando leido: %s\n", commandString)
-		commandReaded := commandsMap[commandString]
+		message := utils.ReadMessage(conn, buffer, logger)
+		commandReaded := commandsMap[message.Command]
 		if commandReaded == nil {
-			fmt.Printf("Comando Null\n")
 			conn.Write([]byte("El comando ingresado no es valido.\nIngrese uno de los siguientes comandos: get, put, ls\n"))
 		} else {
-			commandReaded()
+			commandReaded(message.Parameters)
 		}
 	}
 }
 
-func readMessage(conn net.Conn, buffer []byte) int {
-	readedBytes, err := conn.Read(buffer)
-	fmt.Printf("Ingresado algo\n")
-	if err != nil {
-		error_string := "ERROR: No se pudo leer en la conexion\n"
-		logger.Print(error_string)
-		panic(error_string)
-	}
-	return readedBytes
+func getCommand(params string) {
+	fmt.Printf("Get command con parametros %s\n", params)
 }
 
-func getCommand() {
-	fmt.Print("Get command\n")
+func putCommand(params string) {
+	fmt.Printf("Put command con parametros %s\n", params)
 }
 
-func putCommand() {
-	fmt.Print("Put command\n")
-}
-
-func lsCommand() {
-	fmt.Print("Ls command\n")
+func lsCommand(params string) {
+	fmt.Printf("Ls command con parametros %s\n", params)
 }
