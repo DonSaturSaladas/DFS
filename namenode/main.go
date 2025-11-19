@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 )
 
 var port int = 5000
@@ -41,13 +42,56 @@ func acceptConnection(listener net.Listener) net.Conn {
 }
 
 func handleConnection(conn net.Conn) {
-	buffer := make([]byte, 256)
-	for {
-		_, err := conn.Read(buffer)
-		fmt.Printf("Ingresado algo\n")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%s", buffer)
+	type Commands struct {
+		Get string
+		Put string
+		Ls  string
 	}
+	commands := Commands{
+		Get: "get",
+		Put: "put",
+		Ls:  "ls",
+	}
+	buffer := make([]byte, 256)
+	commandsMap := map[string]func(){
+		commands.Get: getCommand,
+		commands.Put: putCommand,
+		commands.Ls:  lsCommand,
+	}
+
+	for {
+		readedBytes := readMessage(conn, buffer)
+		commandString := strings.TrimSpace(string(buffer[:readedBytes]))
+		fmt.Printf("Comando leido: %s\n", commandString)
+		commandReaded := commandsMap[commandString]
+		if commandReaded == nil {
+			fmt.Printf("Comando Null\n")
+			conn.Write([]byte("El comando ingresado no es valido.\nIngrese uno de los siguientes comandos: get, put, ls\n"))
+		} else {
+			commandReaded()
+		}
+	}
+}
+
+func readMessage(conn net.Conn, buffer []byte) int {
+	readedBytes, err := conn.Read(buffer)
+	fmt.Printf("Ingresado algo\n")
+	if err != nil {
+		error_string := "ERROR: No se pudo leer en la conexion\n"
+		logger.Print(error_string)
+		panic(error_string)
+	}
+	return readedBytes
+}
+
+func getCommand() {
+	fmt.Print("Get command\n")
+}
+
+func putCommand() {
+	fmt.Print("Put command\n")
+}
+
+func lsCommand() {
+	fmt.Print("Ls command\n")
 }
