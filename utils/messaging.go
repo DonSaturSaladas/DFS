@@ -11,6 +11,11 @@ type Message struct {
 	Parameters string
 }
 
+func SendMessage(conn net.Conn, message string) {
+	byteMessage := []byte(message)
+	conn.Write(byteMessage)
+}
+
 func ReadMessage(conn net.Conn, buffer []byte, logger *log.Logger) Message {
 	readedBytes := readConnection(conn, buffer)
 	checkReadingError(readedBytes, logger)
@@ -20,9 +25,9 @@ func ReadMessage(conn net.Conn, buffer []byte, logger *log.Logger) Message {
 
 func checkReadingError(readedBytes int, logger *log.Logger) {
 	if readedBytes < 0 {
-		error_string := "ERROR: No se pudo leer en la conexion\n"
-		logger.Print(error_string)
-		panic(error_string)
+		errorString := "ERROR: No se pudo leer en la conexion\n"
+		logger.Print(errorString)
+		panic(errorString)
 	}
 }
 
