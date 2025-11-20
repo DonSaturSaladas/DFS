@@ -8,7 +8,7 @@ import (
 
 type Message struct {
 	Command    string
-	Parameters string
+	Parameters []string
 }
 
 func SendMessage(conn net.Conn, message string) {
@@ -42,9 +42,9 @@ func readConnection(conn net.Conn, buffer []byte) int {
 func parseMessage(message string) Message {
 	message = strings.TrimSuffix(strings.TrimSuffix(message, "\n"), "\r")
 	messageSlice := strings.Split(message, " ")
-	params := ""
+	var params []string
 	if len(messageSlice) > 1 {
-		params = messageSlice[1]
+		params = messageSlice[1:]
 	}
 	msg := Message{
 		Command:    messageSlice[0],
