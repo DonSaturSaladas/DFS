@@ -8,19 +8,20 @@ import (
 
 var port int = 5000
 var logger *log.Logger
+var conn net.Conn
 
 func main() {
 	logger = utils.CreateLogger("NAMENODE")
 	listener := utils.StartServer(port, logger)
 	for {
-		conn := utils.AcceptConnection(listener, logger)
-		go handleConnection(conn)
+		conn = utils.AcceptConnection(listener, logger)
+		go handleConnection()
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection() {
 	buffer := make([]byte, 256)
-	commandsMap := map[string]func(net.Conn, string){
+	commandsMap := map[string]func([]string){
 		"get": getCommand,
 		"put": putCommand,
 		"ls":  lsCommand,
@@ -33,7 +34,7 @@ func handleConnection(conn net.Conn) {
 			logger.Printf("INFO: El cliente ingreso un comando invalido: \"%s\"", message.Command)
 			utils.SendMessage(conn, "El comando ingresado no es valido.\nIngrese uno de los siguientes comandos: get, put, ls\n")
 		} else {
-			commandReaded(conn, message.Parameters)
+			commandReaded(message.Parameters)
 		}
 	}
 }
