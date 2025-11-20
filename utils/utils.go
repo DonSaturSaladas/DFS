@@ -3,11 +3,8 @@ package utils
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 )
-
-var baseDir string = "/home/maxi/repos/DFS"
 
 func CreateLogger(prefix string) *log.Logger {
 	if prefix == "" {
@@ -19,22 +16,9 @@ func CreateLogger(prefix string) *log.Logger {
 }
 
 func OpenFile(path string) *os.File {
-	logsPath := fmt.Sprintf("%s/%s", baseDir, path)
-	file, err := os.OpenFile(logsPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
 	return file
-}
-
-func ListenPort(port int) (net.Listener, int) {
-	if port < 0 {
-		return nil, -1
-	}
-	portString := fmt.Sprintf(":%d", port)
-	listener, err := net.Listen("tcp", portString)
-	if err != nil {
-		panic(err)
-	}
-	return listener, 0
 }

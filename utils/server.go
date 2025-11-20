@@ -17,6 +17,18 @@ func StartServer(port int, logger *log.Logger) net.Listener {
 	return listener
 }
 
+func ListenPort(port int) (net.Listener, int) {
+	if port < 0 {
+		return nil, -1
+	}
+	portString := fmt.Sprintf(":%d", port)
+	listener, err := net.Listen("tcp", portString)
+	if err != nil {
+		panic(err)
+	}
+	return listener, 0
+}
+
 func AcceptConnection(listener net.Listener, logger *log.Logger) net.Conn {
 	conn, err := listener.Accept()
 	if err != nil {
