@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func putCommand(data MessageData) {
+func putCommand(data utils.Message) {
 	if checkPutErrors(data) {
 		return
 	}
@@ -23,8 +23,8 @@ func putCommand(data MessageData) {
 	preAssignBlocks(data)
 }
 
-func checkPutErrors(data MessageData) bool {
-	if checkEmptyParams(data, "put") {
+func checkPutErrors(data utils.Message) bool {
+	if checkEmptyParams(data) {
 		return true
 	}
 	if len(data.Parameters) < 2 {
@@ -48,7 +48,7 @@ func getCantBlocks(blocks string) int {
 	return cantBlocks
 }
 
-func preAssignBlocks(data MessageData) {
+func preAssignBlocks(data utils.Message) {
 	cantBlocks, _ := strconv.Atoi(data.Parameters[1])
 	orderedBlocks := make([]BlockInfo, len(systemInfo.BlockUsage))
 	copy(orderedBlocks, systemInfo.BlockUsage)
@@ -95,10 +95,9 @@ func incrementFirstElement(orderedBlocks []BlockInfo) {
 }
 
 func getPreAssignResponse(conn net.Conn) bool {
-	responseBuffer := make([]byte, 3)
-	response := utils.ReadMessage(conn, responseBuffer, logger)
+	response := utils.ReadMessage(conn, logger)
 	fmt.Printf("Readed: %q\n", response.Command)
-	return response.Command == "1"
+	return response.Command == "confirm"
 }
 
 func saveBlockUsageModifications(newBlocks []BlockInfo) {

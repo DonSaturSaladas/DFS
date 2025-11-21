@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func getCommand(data MessageData) {
-	if checkEmptyParams(data, "get") {
+func getCommand(data utils.Message) {
+	if checkEmptyParams(data) {
 		return
 	}
 	fileName := data.Parameters[0]
@@ -20,10 +20,10 @@ func getCommand(data MessageData) {
 	utils.SendMessage(data.Connection, response)
 }
 
-func checkEmptyParams(data MessageData, command string) bool {
+func checkEmptyParams(data utils.Message) bool {
 	if len(data.Parameters) == 0 {
-		logger.Printf("ERROR: El cliente ingreso el comando %s sin parametros.\n", command)
-		utils.SendMessage(data.Connection, fmt.Sprintf("Ingrese los parametros luego del comando \"%s\"\n", command))
+		logger.Printf("ERROR: El cliente ingreso el comando %s sin parametros.\n", data.Command)
+		utils.SendMessage(data.Connection, fmt.Sprintf("Ingrese los parametros luego del comando \"%s\"\n", data.Command))
 		return true
 	}
 	return false

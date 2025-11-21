@@ -4,7 +4,7 @@ import (
 	"dfs/utils"
 )
 
-func lsCommand(data MessageData) {
+func lsCommand(data utils.Message) {
 	var metadata map[string][]Block
 	parseJson(&metadata)
 

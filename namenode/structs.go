@@ -1,12 +1,5 @@
 package main
 
-import "net"
-
-type MessageData struct {
-	Connection net.Conn
-	Parameters []string
-}
-
 type Block struct {
 	Name   string `json:"block"`
 	Adress string `json:"node"`
