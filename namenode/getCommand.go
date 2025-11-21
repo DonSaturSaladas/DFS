@@ -7,28 +7,23 @@ import (
 	"os"
 )
 
-type Block struct {
-	Name   string `json:"block"`
-	Adress string `json:"node"`
-}
-
-func getCommand(params []string) {
-	if checkEmptyParams(params, "get") {
+func getCommand(data MessageData) {
+	if checkEmptyParams(data, "get") {
 		return
 	}
-	fileName := params[0]
+	fileName := data.Parameters[0]
 	var metadata map[string][]Block
 	parseJson(&metadata)
 
 	fileMetadata := metadata[fileName]
 	response := readFileMetadata(fileMetadata)
-	utils.SendMessage(conn, response)
+	utils.SendMessage(data.Connection, response)
 }
 
-func checkEmptyParams(params []string, command string) bool {
-	if len(params) == 0 {
+func checkEmptyParams(data MessageData, command string) bool {
+	if len(data.Parameters) == 0 {
 		logger.Printf("ERROR: El cliente ingreso el comando %s sin parametros.\n", command)
-		utils.SendMessage(conn, fmt.Sprintf("Ingrese los parametros luego del comando \"%s\"\n", command))
+		utils.SendMessage(data.Connection, fmt.Sprintf("Ingrese los parametros luego del comando \"%s\"\n", command))
 		return true
 	}
 	return false
@@ -51,6 +46,5 @@ func readFileMetadata(metadata []Block) string {
 		}
 		response = response + block.Adress
 	}
-	response = response + "]"
-	return response
+	return response + "]"
 }
