@@ -10,7 +10,7 @@ import (
 func storeCommand(data utils.Message) {
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	buffer := make([]byte, 1024)
-	for i := 0; i < cantBlocks; i++ {
+	for range cantBlocks {
 		utils.SendMessage(data.Connection, "block")
 		response := utils.ReadMessage(data.Connection, logger)
 		if response.Command == "blockNum" {
@@ -32,11 +32,7 @@ func getCantBlocks(num string) int {
 
 func createBlock(fileName string, blockNum string) *os.File {
 	fullFileName := fmt.Sprintf("%s-block_%s.%s", fileName[:len(fileName)-4], blockNum, fileName[len(fileName)-3:])
-	return createFile(fullFileName)
-}
-
-func createFile(fileName string) *os.File {
-	fullPath := fmt.Sprintf("blocks/%s/%s", ip, fileName)
+	fullPath := fmt.Sprintf("blocks/%s", fullFileName)
 	file, _ := os.Create(fullPath)
 	return file
 }
