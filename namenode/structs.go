@@ -6,6 +6,7 @@ type Block struct {
 }
 
 type SystemInfo struct {
+	NamenodeIp string      `json:"namenode_ip"`
 	BlockUsage []BlockInfo `json:"block_usage"`
 }
 

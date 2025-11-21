@@ -17,7 +17,7 @@ func getCommand(data utils.Message) {
 
 	fileMetadata := metadata[fileName]
 	response := readFileMetadata(fileMetadata)
-	utils.SendMessage(data.Connection, response)
+	utils.SendMessage(data.Connection, "addresses "+response)
 }
 
 func checkEmptyParams(data utils.Message) bool {
@@ -39,12 +39,12 @@ func parseJson(variable *map[string][]Block) {
 }
 
 func readFileMetadata(metadata []Block) string {
-	response := "["
+	response := ""
 	for index, block := range metadata {
 		if index > 0 {
-			response = response + ","
+			response = response + " "
 		}
 		response = response + block.Adress
 	}
-	return response + "]"
+	return response
 }
