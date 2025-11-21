@@ -25,7 +25,7 @@ func ReadMessage(conn net.Conn, logger *log.Logger) Message {
 	readedBytes := readConnection(conn, buffer)
 	checkReadingError(readedBytes, logger)
 	messageString := string(buffer[:readedBytes])
-	message := parseMessageData(messageString)
+	message := ParseMessageData(messageString)
 	message.Connection = conn
 	return message
 }
@@ -52,7 +52,7 @@ func checkReadingError(readedBytes int, logger *log.Logger) {
 	}
 }
 
-func parseMessageData(message string) Message {
+func ParseMessageData(message string) Message {
 	message = strings.TrimSuffix(strings.TrimSuffix(message, "\n"), "\r")
 	messageSlice := strings.Split(message, " ")
 	var params []string
