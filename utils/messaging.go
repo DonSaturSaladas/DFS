@@ -9,6 +9,7 @@ import (
 type Message struct {
 	Command    string
 	Parameters []string
+	Connection net.Conn
 }
 
 func SendMessage(conn net.Conn, message string) {
@@ -16,11 +17,14 @@ func SendMessage(conn net.Conn, message string) {
 	conn.Write(byteMessage)
 }
 
-func ReadMessage(conn net.Conn, buffer []byte, logger *log.Logger) Message {
+func ReadMessage(conn net.Conn, logger *log.Logger) Message {
+	buffer := make([]byte, 1024)
 	readedBytes := readConnection(conn, buffer)
 	checkReadingError(readedBytes, logger)
 	messageString := string(buffer[:readedBytes])
-	return parseMessage(messageString)
+	message := parseMessageData(messageString)
+	message.Connection = conn
+	return message
 }
 
 func checkReadingError(readedBytes int, logger *log.Logger) {
@@ -39,7 +43,7 @@ func readConnection(conn net.Conn, buffer []byte) int {
 	return readedBytes
 }
 
-func parseMessage(message string) Message {
+func parseMessageData(message string) Message {
 	message = strings.TrimSuffix(strings.TrimSuffix(message, "\n"), "\r")
 	messageSlice := strings.Split(message, " ")
 	var params []string
