@@ -16,6 +16,9 @@ func SendMessage(conn net.Conn, message string) {
 	byteMessage := []byte(message)
 	conn.Write(byteMessage)
 }
+func SendData(conn net.Conn, data []byte) {
+	conn.Write(data)
+}
 
 func ReadMessage(conn net.Conn, logger *log.Logger) Message {
 	buffer := make([]byte, 256)
