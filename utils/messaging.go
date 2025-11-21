@@ -18,7 +18,7 @@ func SendMessage(conn net.Conn, message string) {
 }
 
 func ReadMessage(conn net.Conn, logger *log.Logger) Message {
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 256)
 	readedBytes := readConnection(conn, buffer)
 	checkReadingError(readedBytes, logger)
 	messageString := string(buffer[:readedBytes])
@@ -27,12 +27,10 @@ func ReadMessage(conn net.Conn, logger *log.Logger) Message {
 	return message
 }
 
-func checkReadingError(readedBytes int, logger *log.Logger) {
-	if readedBytes < 0 {
-		errorString := "ERROR: No se pudo leer en la conexion\n"
-		logger.Print(errorString)
-		panic(errorString)
-	}
+func ReadData(conn net.Conn, buffer []byte, logger *log.Logger) int {
+	readedBytes := readConnection(conn, buffer)
+	checkReadingError(readedBytes, logger)
+	return readedBytes
 }
 
 func readConnection(conn net.Conn, buffer []byte) int {
@@ -41,6 +39,14 @@ func readConnection(conn net.Conn, buffer []byte) int {
 		readedBytes = -1
 	}
 	return readedBytes
+}
+
+func checkReadingError(readedBytes int, logger *log.Logger) {
+	if readedBytes < 0 {
+		errorString := "ERROR: No se pudo leer en la conexion\n"
+		logger.Print(errorString)
+		panic(errorString)
+	}
 }
 
 func parseMessageData(message string) Message {
