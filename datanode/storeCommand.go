@@ -1,0 +1,42 @@
+package main
+
+import (
+	"dfs/utils"
+	"fmt"
+	"os"
+	"strconv"
+)
+
+func storeCommand(data utils.Message) {
+	cantBlocks := getCantBlocks(data.Parameters[1])
+	buffer := make([]byte, 1024)
+	for i := 0; i < cantBlocks; i++ {
+		utils.SendMessage(data.Connection, "block")
+		response := utils.ReadMessage(data.Connection, logger)
+		if response.Command == "blockNum" {
+			block := createBlock(data.Parameters[0], response.Parameters[0])
+			utils.SendMessage(data.Connection, "sendData")
+			readedBytes := utils.ReadData(data.Connection, buffer, logger)
+			block.Write(buffer[:readedBytes])
+		}
+	}
+}
+
+func getCantBlocks(num string) int {
+	n, err := strconv.Atoi(num)
+	if err != nil {
+		n = -1
+	}
+	return n
+}
+
+func createBlock(fileName string, blockNum string) *os.File {
+	fullFileName := fmt.Sprintf("%s-block_%s.%s", fileName[:len(fileName)-4], blockNum, fileName[len(fileName)-3:])
+	return createFile(fullFileName)
+}
+
+func createFile(fileName string) *os.File {
+	fullPath := fmt.Sprintf("blocks/%s/%s", ip, fileName)
+	file, _ := os.Create(fullPath)
+	return file
+}
