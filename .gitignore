@@ -4,6 +4,9 @@
 
 data/
 blocks/
+namenode/namenode
+datanode/datanode
+client/client
 
 # Binaries for programs and plugins
 *.exe
