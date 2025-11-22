@@ -12,6 +12,7 @@ func putCommand(data utils.Message) {
 	namenodeConn, groupedAddresses := getFilePartsAddress(data, fileBlocks)
 	sendBlocksToDatanodes(data.Parameters[0], fileBlocks, groupedAddresses)
 	utils.SendMessage(namenodeConn, "confirm")
+	namenodeConn.Close()
 }
 
 func divideFile(data utils.Message) []FilePart {
@@ -36,7 +37,7 @@ func divideFile(data utils.Message) []FilePart {
 
 func getFilePartsAddress(data utils.Message, fileBlocks []FilePart) (net.Conn, map[string][]int) {
 	conn := connectToNode(namenode_ip)
-	message := fmt.Sprintf("put %s %d", data.Parameters[0], len(fileBlocks)+1)
+	message := fmt.Sprintf("put %s %d", data.Parameters[0], len(fileBlocks))
 	utils.SendMessage(conn, message)
 	response := utils.ReadMessage(conn, nil)
 	if response.Command == "addresses" {
@@ -57,6 +58,7 @@ func sendBlocksToDatanodes(fileName string, blocks []FilePart, groupedAddresses 
 		message := fmt.Sprintf("store %s %d", fileName, len(blocksIndexArray))
 		utils.SendMessage(conn, message)
 		sendBlocks(conn, blocks, blocksIndexArray)
+		conn.Close()
 	}
 }
 
