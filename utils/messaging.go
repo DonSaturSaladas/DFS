@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"io"
 	"log"
 	"net"
 	"strings"
 )
+
+const CONNECTION_ENDED = -2
 
 type Message struct {
 	Command    string
@@ -24,6 +27,9 @@ func ReadMessage(conn net.Conn, logger *log.Logger) Message {
 	buffer := make([]byte, 256)
 	readedBytes := readConnection(conn, buffer)
 	checkReadingError(readedBytes, logger)
+	if readedBytes == CONNECTION_ENDED {
+		return Message{Command: "connection_ended"}
+	}
 	messageString := string(buffer[:readedBytes])
 	message := ParseMessageData(messageString)
 	message.Connection = conn
@@ -38,14 +44,16 @@ func ReadData(conn net.Conn, buffer []byte, logger *log.Logger) int {
 
 func readConnection(conn net.Conn, buffer []byte) int {
 	readedBytes, err := conn.Read(buffer)
-	if err != nil {
+	if readedBytes == 0 && err == io.EOF {
+		readedBytes = CONNECTION_ENDED
+	} else if err != nil {
 		readedBytes = -1
 	}
 	return readedBytes
 }
 
 func checkReadingError(readedBytes int, logger *log.Logger) {
-	if readedBytes < 0 {
+	if readedBytes == -1 {
 		errorString := "ERROR: No se pudo leer en la conexion\n"
 		logger.Print(errorString)
 		panic(errorString)
