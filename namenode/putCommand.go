@@ -57,7 +57,7 @@ func preAssignBlocks(data utils.Message) {
 		return orderedBlocks[i].Usage < orderedBlocks[j].Usage
 	})
 
-	responseString := ""
+	responseString := "addresses "
 	blocks := make([]Block, cantBlocks)
 	for i := 1; i <= cantBlocks; i++ {
 		responseString = responseString + orderedBlocks[0].Address + " "
