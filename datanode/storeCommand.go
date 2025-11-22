@@ -15,12 +15,12 @@ func storeCommand(data utils.Message) {
 			Connection: data.Connection,
 			Command:    "block",
 		}
-		utils.SendMessage(message)
+		message.Send()
 		response := utils.ReadMessage(data.Connection, logger)
 		if response.Command == "blockNum" {
 			block := createBlock(data.Parameters[0], response.Parameters[0])
 			message.Command = "sendData"
-			utils.SendMessage(message)
+			message.Send()
 			readedBytes := utils.ReadData(data.Connection, buffer, logger)
 			block.Write(buffer[:readedBytes])
 		}

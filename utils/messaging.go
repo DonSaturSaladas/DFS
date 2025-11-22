@@ -15,6 +15,10 @@ type Message struct {
 	Connection net.Conn
 }
 
+func (m Message) Send() {
+	m.Connection.Write([]byte(m.toString()))
+}
+
 func (m Message) toString() string {
 	messageString := m.Command
 	for _, param := range m.Parameters {
@@ -23,10 +27,6 @@ func (m Message) toString() string {
 	return messageString
 }
 
-func SendMessage(message Message) {
-	messageString := message.toString()
-	message.Connection.Write([]byte(messageString))
-}
 func SendData(conn net.Conn, data []byte) {
 	conn.Write(data)
 }

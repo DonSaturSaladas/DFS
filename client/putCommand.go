@@ -25,7 +25,7 @@ func putCommand(data utils.Message) {
 		Connection: namenodeConn,
 		Command:    "confirm",
 	}
-	utils.SendMessage(confirmMessage)
+	confirmMessage.Send()
 	namenodeConn.Close()
 }
 
@@ -68,7 +68,7 @@ func getFilePartsAddress(data utils.Message, fileBlocks []FilePart) (net.Conn, m
 		Command:    "put",
 		Parameters: []string{data.Parameters[0], strconv.Itoa(len(fileBlocks))},
 	}
-	utils.SendMessage(message)
+	message.Send()
 	response := utils.ReadMessage(conn, nil)
 	if response.Command == "addresses" {
 		assignAddressesToBlocks(fileBlocks, response.Parameters)
@@ -91,7 +91,7 @@ func sendBlocksToDatanodes(fileName string, blocks []FilePart, groupedAddresses 
 			Parameters: []string{fileName, strconv.Itoa(len(blocksIndexArray))},
 		}
 
-		utils.SendMessage(message)
+		message.Send()
 		sendBlocks(conn, blocks, blocksIndexArray)
 		conn.Close()
 	}
@@ -106,7 +106,7 @@ func sendBlocks(conn net.Conn, blocks []FilePart, blocksIndexArray []int) {
 				Command:    "blockNum",
 				Parameters: []string{strconv.Itoa(blockIndex)},
 			}
-			utils.SendMessage(message)
+			message.Send()
 			response = utils.ReadMessage(conn, nil)
 			if response.Command == "sendData" {
 				utils.SendData(conn, blocks[blockIndex-1].Data)

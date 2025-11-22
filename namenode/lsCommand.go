@@ -11,7 +11,7 @@ func lsCommand(data utils.Message) {
 
 	message := getLsMessage(data, filesList)
 
-	utils.SendMessage(message)
+	message.Send()
 }
 
 func readMetadataFiles(metadata map[string][]Block) []string {

@@ -54,7 +54,7 @@ func assignBlocks(data utils.Message) {
 		}
 		incrementFirstElement(orderedBlocks)
 	}
-	utils.SendMessage(response)
+	response.Send()
 
 	blocksSaved := getPreAssignResponse(data.Connection)
 	if blocksSaved {

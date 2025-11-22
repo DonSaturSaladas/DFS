@@ -49,7 +49,7 @@ func getFileBlocks(conn net.Conn, fileName string) utils.Message {
 		Command:    "get",
 		Parameters: []string{fileName},
 	}
-	utils.SendMessage(message)
+	message.Send()
 	response := utils.ReadMessage(conn, nil)
 	return response
 }
@@ -77,7 +77,7 @@ func retrieveFileData(data utils.Message, fileParts []FilePart, blockAddresses m
 			Command:    "read",
 			Parameters: []string{fileName, strconv.Itoa(cantBlocks)},
 		}
-		utils.SendMessage(message)
+		message.Send()
 		for _, blockIndex := range blockArray {
 			buffer := make([]byte, 1024)
 			response = utils.ReadMessage(datanodeConn, nil)
@@ -85,7 +85,7 @@ func retrieveFileData(data utils.Message, fileParts []FilePart, blockAddresses m
 				message.Command = "blockNum"
 				message.Parameters = []string{strconv.Itoa(blockIndex)}
 
-				utils.SendMessage(message)
+				message.Send()
 				readedBytes := utils.ReadData(datanodeConn, buffer, nil)
 				fileParts[filePartsIndex] = FilePart{
 					Data:     buffer[:readedBytes],

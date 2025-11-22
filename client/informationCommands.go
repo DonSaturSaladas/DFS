@@ -12,7 +12,7 @@ func lsCommand(data utils.Message) {
 		Connection: conn,
 		Command:    "ls",
 	}
-	utils.SendMessage(message)
+	message.Send()
 	response := utils.ReadMessage(conn, nil)
 	if response.Command == "files" {
 		fmt.Printf("Archivos en el DFS:\n -")
@@ -42,7 +42,7 @@ func getFileInfo(data utils.Message) []string {
 		Command:    "get",
 		Parameters: data.Parameters,
 	}
-	utils.SendMessage(message)
+	message.Send()
 	response := utils.ReadMessage(conn, nil)
 	return response.Parameters
 }

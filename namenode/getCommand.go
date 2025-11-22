@@ -15,7 +15,7 @@ func getCommand(data utils.Message) {
 		Command:    "addresses",
 		Parameters: addresses,
 	}
-	utils.SendMessage(message)
+	message.Send()
 }
 
 func readFileMetadata(fileMetadata []Block) []string {
