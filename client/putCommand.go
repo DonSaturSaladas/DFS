@@ -13,7 +13,12 @@ func putCommand(data utils.Message) {
 		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
 		return
 	}
-	fileBlocks := divideFile(data)
+	file, err := openFile(data.Parameters[0])
+	defer file.Close()
+	if err {
+		return
+	}
+	fileBlocks := divideFile(file)
 	namenodeConn, groupedAddresses := getFilePartsAddress(data, fileBlocks)
 	sendBlocksToDatanodes(data.Parameters[0], fileBlocks, groupedAddresses)
 	confirmMessage := utils.Message{
@@ -24,10 +29,22 @@ func putCommand(data utils.Message) {
 	namenodeConn.Close()
 }
 
-func divideFile(data utils.Message) []FilePart {
-	fileName := data.Parameters[0]
-	file, _ := os.Open(fileName)
+func openFile(filePath string) (*os.File, bool) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Printf("ERROR: El archivo %s no existe.\n", filePath)
+		} else if os.IsPermission(err) {
+			fmt.Printf("ERROR: Permisos insuficientes para abrir el archivo %s.\n", filePath)
+		} else {
+			fmt.Printf("ERROR: No se pudo abrir el archivo %s.\n", filePath)
+		}
+		return nil, false
+	}
+	return file, false
+}
 
+func divideFile(file *os.File) []FilePart {
 	fileBlocks := make([]FilePart, 0)
 	buffer := make([]byte, 1024)
 	var readedBytes = 1024
