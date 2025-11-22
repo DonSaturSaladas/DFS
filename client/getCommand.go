@@ -18,10 +18,14 @@ func getCommand(data utils.Message) {
 		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
 		return
 	}
-	addresses := getFileAdresses(data.Parameters[0])
-	defer addresses.Connection.Close()
-	groupedAddresses := groupAddresses(addresses.Parameters)
-	fileParts := make([]FilePart, len(addresses.Parameters))
+	blockAddresses := getBlocksAdresses(data.Parameters[0])
+	defer blockAddresses.Connection.Close()
+	if len(blockAddresses.Parameters) == 0 {
+		fmt.Printf("El archivo %s no se encuentra en el DFS", data.Parameters[0])
+		return
+	}
+	groupedAddresses := groupAddresses(blockAddresses.Parameters)
+	fileParts := make([]FilePart, len(blockAddresses.Parameters))
 	retrieveFileData(data, fileParts, groupedAddresses)
 	fmt.Print(len(fileParts))
 	for _, part := range fileParts {
@@ -29,7 +33,7 @@ func getCommand(data utils.Message) {
 	}
 }
 
-func getFileAdresses(fileName string) utils.Message {
+func getBlocksAdresses(fileName string) utils.Message {
 	conn := connectToNode(namenode_ip)
 	return getFileBlocks(conn, fileName)
 }
@@ -50,24 +54,24 @@ func getFileBlocks(conn net.Conn, fileName string) utils.Message {
 	return response
 }
 
-func groupAddresses(addresses []string) map[string][]int {
+func groupAddresses(blockAddresses []string) map[string][]int {
 	addressMap := map[string][]int{}
-	for blockNum, address := range addresses {
+	for blockNum, address := range blockAddresses {
 		addressMap[address] = append(addressMap[address], blockNum+1)
 	}
 	return addressMap
 }
 
-func retrieveFileData(data utils.Message, fileParts []FilePart, addresses map[string][]int) {
+func retrieveFileData(data utils.Message, fileParts []FilePart, blockAddresses map[string][]int) {
 	var datanodeConn net.Conn
 	fileName := data.Parameters[0]
 	var message utils.Message
 	var response utils.Message
 	filePartsIndex := 0
 
-	for ip, blockArray := range addresses {
+	for ip, blockArray := range blockAddresses {
 		datanodeConn = connectToNode(ip)
-		cantBlocks := len(addresses[ip])
+		cantBlocks := len(blockAddresses[ip])
 		message = utils.Message{
 			Connection: datanodeConn,
 			Command:    "read",
