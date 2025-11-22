@@ -57,21 +57,17 @@ func preAssignBlocks(data utils.Message) {
 		return orderedBlocks[i].Usage < orderedBlocks[j].Usage
 	})
 
-	for _, block := range orderedBlocks {
-		fmt.Printf("Bloque %s con %d usage\n", block.Address, block.Usage)
-	}
-
-	responseString := "["
+	responseString := ""
 	blocks := make([]Block, cantBlocks)
 	for i := 1; i <= cantBlocks; i++ {
-		responseString = responseString + orderedBlocks[0].Address + ","
+		responseString = responseString + orderedBlocks[0].Address + " "
 		blocks[i-1] = Block{
 			Name:   fmt.Sprintf("b%d", i),
 			Adress: orderedBlocks[0].Address,
 		}
 		incrementFirstElement(orderedBlocks)
 	}
-	responseString = responseString[:len(responseString)-1] + "]"
+	responseString = responseString[:len(responseString)-1]
 	utils.SendMessage(data.Connection, responseString)
 	blocksSaved := getPreAssignResponse(data.Connection)
 	if blocksSaved {
@@ -96,7 +92,6 @@ func incrementFirstElement(orderedBlocks []BlockInfo) {
 
 func getPreAssignResponse(conn net.Conn) bool {
 	response := utils.ReadMessage(conn, logger)
-	fmt.Printf("Readed: %q\n", response.Command)
 	return response.Command == "confirm"
 }
 
