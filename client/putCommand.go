@@ -2,12 +2,17 @@ package main
 
 import (
 	"dfs/utils"
+	"fmt"
 	"net"
 	"os"
 	"strconv"
 )
 
 func putCommand(data utils.Message) {
+	if len(data.Parameters) < 1 || data.Parameters[0] == "" {
+		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
+		return
+	}
 	fileBlocks := divideFile(data)
 	namenodeConn, groupedAddresses := getFilePartsAddress(data, fileBlocks)
 	sendBlocksToDatanodes(data.Parameters[0], fileBlocks, groupedAddresses)

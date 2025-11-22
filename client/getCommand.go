@@ -15,9 +15,11 @@ type FilePart struct {
 
 func getCommand(data utils.Message) {
 	if len(data.Parameters) != 1 || data.Parameters[0] == "" {
-		fmt.Print("ERROR: Ingrese el nombre del archivo")
+		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
+		return
 	}
 	addresses := getFileAdresses(data.Parameters[0])
+	defer addresses.Connection.Close()
 	groupedAddresses := groupAddresses(addresses.Parameters)
 	fileParts := make([]FilePart, len(addresses.Parameters))
 	retrieveFileData(data, fileParts, groupedAddresses)

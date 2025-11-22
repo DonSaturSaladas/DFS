@@ -26,7 +26,6 @@ func getUserInput() utils.Message {
 	buffer := bufio.NewReader(os.Stdin)
 	fmt.Print("\nIngrese un comando: ")
 	commandReaded, _ := buffer.ReadString('\n')
-	fmt.Printf("%s\n", commandReaded)
 	message := utils.ParseMessageData(commandReaded)
 	return message
 }
