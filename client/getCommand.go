@@ -9,6 +9,7 @@ import (
 type FilePart struct {
 	Data     []byte
 	BlockNum int
+	DestNode string
 }
 
 func getCommand(data utils.Message) {
