@@ -19,6 +19,7 @@ var metadataMutex sync.RWMutex
 
 func main() {
 	listener := startNamenode()
+	defer listener.Close()
 	for {
 		conn := utils.AcceptConnection(listener, logger)
 		go handleConnection(conn)

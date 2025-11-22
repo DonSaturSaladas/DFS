@@ -13,6 +13,7 @@ var puerto string //LOCALMENTE (borrar cuando este finalizado)
 
 func main() {
 	listener := startDatanode()
+	defer listener.Close()
 	for {
 		conn := utils.AcceptConnection(listener, logger)
 		go handleConnection(conn)
