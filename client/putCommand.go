@@ -39,7 +39,7 @@ func openFile(filePath string) (*os.File, bool) {
 		} else {
 			fmt.Printf("ERROR: No se pudo abrir el archivo %s.\n", filePath)
 		}
-		return nil, false
+		return nil, true
 	}
 	return file, false
 }
