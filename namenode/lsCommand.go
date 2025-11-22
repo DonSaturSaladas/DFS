@@ -5,10 +5,9 @@ import (
 )
 
 func lsCommand(data utils.Message) {
-	var metadata map[string][]Block
-	parseJson(&metadata)
-
+	metadataMutex.RLock()
 	response := readMetadataFiles(metadata)
+	metadataMutex.RUnlock()
 
 	utils.SendMessage(data.Connection, response)
 }

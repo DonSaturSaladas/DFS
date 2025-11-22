@@ -2,9 +2,7 @@ package main
 
 import (
 	"dfs/utils"
-	"encoding/json"
 	"fmt"
-	"os"
 )
 
 func getCommand(data utils.Message) {
@@ -12,11 +10,10 @@ func getCommand(data utils.Message) {
 		return
 	}
 	fileName := data.Parameters[0]
-	var metadata map[string][]Block
-	parseJson(&metadata)
-
+	metadataMutex.RLock()
 	fileMetadata := metadata[fileName]
 	response := readFileMetadata(fileMetadata)
+	metadataMutex.RUnlock()
 	utils.SendMessage(data.Connection, "addresses "+response)
 }
 
@@ -27,15 +24,6 @@ func checkEmptyParams(data utils.Message) bool {
 		return true
 	}
 	return false
-}
-
-func parseJson(variable *map[string][]Block) {
-	byteValue, err := os.ReadFile("data/metadata.json")
-	if err != nil {
-		logger.Print("ERROR: No se pudo abrir el archivo de metadata.")
-		panic(err)
-	}
-	json.Unmarshal(byteValue, variable)
 }
 
 func readFileMetadata(metadata []Block) string {

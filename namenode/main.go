@@ -6,10 +6,16 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 )
 
 var logger *log.Logger
+
 var systemInfo SystemInfo
+var systemInfoMutex sync.RWMutex
+
+var metadata map[string][]Block
+var metadataMutex sync.RWMutex
 
 func main() {
 	listener := startNamenode()
@@ -23,6 +29,7 @@ func startNamenode() net.Listener {
 	logger = utils.CreateLogger("NAMENODE")
 	listener := utils.StartServer(5000, logger)
 	parseSystemInfo()
+	parseMetadata()
 	return listener
 }
 
@@ -33,6 +40,15 @@ func parseSystemInfo() {
 		panic(err)
 	}
 	json.Unmarshal(byteValue, &systemInfo)
+}
+
+func parseMetadata() {
+	byteValue, err := os.ReadFile("data/metadata.json")
+	if err != nil {
+		logger.Print("ERROR: No se pudo abrir el archivo de metadata.")
+		panic(err)
+	}
+	json.Unmarshal(byteValue, &metadata)
 }
 
 func handleConnection(conn net.Conn) {

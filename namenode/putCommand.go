@@ -49,7 +49,10 @@ func getCantBlocks(blocks string) int {
 }
 
 func preAssignBlocks(data utils.Message) {
-	cantBlocks, _ := strconv.Atoi(data.Parameters[1])
+	cantBlocks := getCantBlocks(data.Parameters[1])
+	fmt.Print("Solicitando el lock de la info del sistema\n")
+	systemInfoMutex.Lock()
+	fmt.Print("Lock de la info del sistema obtenido\n")
 	orderedBlocks := make([]BlockInfo, len(systemInfo.BlockUsage))
 	copy(orderedBlocks, systemInfo.BlockUsage)
 
@@ -69,13 +72,21 @@ func preAssignBlocks(data utils.Message) {
 	}
 	responseString = responseString[:len(responseString)-1]
 	utils.SendMessage(data.Connection, responseString)
+
 	blocksSaved := getPreAssignResponse(data.Connection)
 	if blocksSaved {
 		saveBlockUsageModifications(orderedBlocks)
+		systemInfoMutex.Unlock()
+		fmt.Print("Lock de la info del sistema liberado\n")
+		fmt.Print("Solicitando el lock de la metadata\n")
+		metadataMutex.Lock()
+		fmt.Print("Lock de la metadata obtenido\n")
 		addFileToMetadata(data.Parameters[0], blocks)
+		metadataMutex.Unlock()
+		fmt.Print("Lock de la metadata liberado\n")
 	} else {
-		//Discard JSON
-		fmt.Print("Bloques NO guardados\n")
+		systemInfoMutex.RUnlock()
+		fmt.Print("Lock de la info del sistema liberado\n")
 	}
 }
 
@@ -104,8 +115,6 @@ func saveBlockUsageModifications(newBlocks []BlockInfo) {
 }
 
 func addFileToMetadata(fileName string, blocks []Block) {
-	var metadata map[string][]Block
-	parseJson(&metadata)
 	metadata[fileName] = blocks
 	file, _ := os.Create("data/metadata.json")
 	jsonData, _ := json.MarshalIndent(metadata, "", "\t")
