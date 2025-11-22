@@ -18,15 +18,20 @@ func getCommand(data utils.Message) {
 		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
 		return
 	}
+	logger.Printf("INFO: Solicitando al namenode la direccion de los bloques del archivo %s.\n", data.Parameters[0])
 	blockAddresses := getBlocksAdresses(data.Parameters[0])
 	defer blockAddresses.Connection.Close()
 	if len(blockAddresses.Parameters) == 0 {
+		logger.Printf("INFO: El archivo %s no se encontro en el DFS.\n", data.Parameters[0])
 		fmt.Printf("El archivo %s no se encuentra en el DFS", data.Parameters[0])
 		return
 	}
+	logger.Printf("INFO: Mensaje con las direcciones de los bloques del archivo %s recibidas.\n", data.Parameters[0])
 	groupedAddresses := groupAddresses(blockAddresses.Parameters)
 	fileParts := make([]FilePart, len(blockAddresses.Parameters))
+	logger.Printf("INFO: Solicitando los bloques del archivo %s.\n", data.Parameters[0])
 	retrieveFileData(data, fileParts, groupedAddresses)
+	logger.Printf("INFO: Recibidos los bloques del archivo %s.\n", data.Parameters[0])
 	fmt.Print(len(fileParts))
 	for _, part := range fileParts {
 		fmt.Printf("Parte %d: %s", part.BlockNum, string(part.Data))
@@ -39,7 +44,13 @@ func getBlocksAdresses(fileName string) utils.Message {
 }
 
 func connectToNode(ip string) net.Conn {
-	conn, _ := net.Dial("tcp", ip)
+	logger.Printf("INFO: Conectandose al nodo %s.\n", ip)
+	conn, err := net.Dial("tcp", ip)
+	if err != nil {
+		logger.Printf("ERROR: No se pudo conectar al nodo %s.\n", ip)
+		return nil
+	}
+	logger.Printf("INFO: Conexion establecida con el nodo %s.\n", ip)
 	return conn
 }
 
@@ -50,6 +61,7 @@ func getFileBlocks(conn net.Conn, fileName string) utils.Message {
 		Parameters: []string{fileName},
 	}
 	message.Send()
+	logger.Printf("INFO: Esperando respuesta del namenode con la direccion de los bloques del archivo %s.\n", fileName)
 	response := utils.ReadMessage(conn, nil)
 	return response
 }
