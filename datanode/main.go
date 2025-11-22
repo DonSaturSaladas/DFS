@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 )
 
 var logger *log.Logger
-var ip string //LOCALMENTE (borrar cuando este finalizado)
+var puerto string //LOCALMENTE (borrar cuando este finalizado)
 
 func main() {
 	listener := startDatanode()
@@ -19,10 +20,11 @@ func main() {
 }
 
 func startDatanode() net.Listener {
-	fmt.Print("Ingresar la ip del nodo: ")
-	fmt.Scan(&ip)
-	logger = utils.CreateLogger("NAMENODE")
-	listener := utils.StartServer(5000, logger)
+	fmt.Print("Ingresar el puerto del nodo: ")
+	fmt.Scan(&puerto)
+	port, _ := strconv.Atoi(puerto)
+	logger = utils.CreateLogger("DATANODE")
+	listener := utils.StartServer(port, logger)
 	return listener
 }
 
@@ -35,7 +37,9 @@ func handleConnection(conn net.Conn) {
 	for {
 		message := utils.ReadMessage(conn, logger)
 		commandReaded := commandsMap[message.Command]
-		if commandReaded == nil {
+		if message.Command == "connection_ended" {
+			return
+		} else if commandReaded == nil {
 			logger.Printf("INFO: El cliente ingreso un comando invalido: \"%s\"", message.Command)
 			utils.SendMessage(conn, "El comando ingresado no es valido.\nIngrese uno de los siguientes comandos: store, read\n")
 		} else {
