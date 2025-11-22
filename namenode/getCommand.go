@@ -2,37 +2,26 @@ package main
 
 import (
 	"dfs/utils"
-	"fmt"
 )
 
 func getCommand(data utils.Message) {
-	if checkEmptyParams(data) {
-		return
-	}
 	fileName := data.Parameters[0]
 	metadataMutex.RLock()
 	fileMetadata := metadata[fileName]
-	response := readFileMetadata(fileMetadata)
+	addresses := readFileMetadata(fileMetadata)
 	metadataMutex.RUnlock()
-	utils.SendMessage(data.Connection, "addresses "+response)
+	message := utils.Message{
+		Connection: data.Connection,
+		Command:    "addresses",
+		Parameters: addresses,
+	}
+	utils.SendMessage(message)
 }
 
-func checkEmptyParams(data utils.Message) bool {
-	if len(data.Parameters) == 0 {
-		logger.Printf("ERROR: El cliente ingreso el comando %s sin parametros.\n", data.Command)
-		utils.SendMessage(data.Connection, fmt.Sprintf("Ingrese los parametros luego del comando \"%s\"\n", data.Command))
-		return true
+func readFileMetadata(fileMetadata []Block) []string {
+	addresses := make([]string, len(fileMetadata))
+	for index, block := range fileMetadata {
+		addresses[index] = block.Adress
 	}
-	return false
-}
-
-func readFileMetadata(metadata []Block) string {
-	response := ""
-	for index, block := range metadata {
-		if index > 0 {
-			response = response + " "
-		}
-		response = response + block.Adress
-	}
-	return response
+	return addresses
 }

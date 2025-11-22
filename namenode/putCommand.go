@@ -11,33 +11,12 @@ import (
 )
 
 func putCommand(data utils.Message) {
-	if checkPutErrors(data) {
-		return
-	}
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	if cantBlocks == -1 {
 		logger.Print("ERROR: No se pudo realizar la conversion de string a entero.\n")
-		utils.SendMessage(data.Connection, "ERROR: Ingrese un numero valido de bloques.\n")
 		return
 	}
-	preAssignBlocks(data)
-}
-
-func checkPutErrors(data utils.Message) bool {
-	if checkEmptyParams(data) {
-		return true
-	}
-	if len(data.Parameters) < 2 {
-		logger.Print("ERROR: El cliente ingreso el comando put con menos de 2 parametros.\n")
-		utils.SendMessage(data.Connection, "ERROR: El uso del comando es put <nombreArchivo> <cantidadBloques>.\n")
-		return true
-	}
-	if data.Parameters[0] == "" {
-		logger.Print("ERROR: El cliente ingreso el comando put con el nombre de archivo invalido.\n")
-		utils.SendMessage(data.Connection, "ERROR: Ingrese un nombre de archivo valido.\n")
-		return true
-	}
-	return false
+	assignBlocks(data)
 }
 
 func getCantBlocks(blocks string) int {
@@ -48,7 +27,7 @@ func getCantBlocks(blocks string) int {
 	return cantBlocks
 }
 
-func preAssignBlocks(data utils.Message) {
+func assignBlocks(data utils.Message) {
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	fmt.Print("Solicitando el lock de la info del sistema\n")
 	systemInfoMutex.Lock()
@@ -60,18 +39,22 @@ func preAssignBlocks(data utils.Message) {
 		return orderedBlocks[i].Usage < orderedBlocks[j].Usage
 	})
 
-	responseString := "addresses "
+	response := utils.Message{
+		Connection: data.Connection,
+		Command:    "addresses",
+		Parameters: make([]string, cantBlocks),
+	}
+
 	blocks := make([]Block, cantBlocks)
 	for i := 1; i <= cantBlocks; i++ {
-		responseString = responseString + orderedBlocks[0].Address + " "
+		response.Parameters[i-1] = orderedBlocks[0].Address
 		blocks[i-1] = Block{
 			Name:   fmt.Sprintf("b%d", i),
 			Adress: orderedBlocks[0].Address,
 		}
 		incrementFirstElement(orderedBlocks)
 	}
-	responseString = responseString[:len(responseString)-1]
-	utils.SendMessage(data.Connection, responseString)
+	utils.SendMessage(response)
 
 	blocksSaved := getPreAssignResponse(data.Connection)
 	if blocksSaved {

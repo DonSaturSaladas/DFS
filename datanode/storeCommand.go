@@ -11,11 +11,16 @@ func storeCommand(data utils.Message) {
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	buffer := make([]byte, 1024)
 	for range cantBlocks {
-		utils.SendMessage(data.Connection, "block")
+		message := utils.Message{
+			Connection: data.Connection,
+			Command:    "block",
+		}
+		utils.SendMessage(message)
 		response := utils.ReadMessage(data.Connection, logger)
 		if response.Command == "blockNum" {
 			block := createBlock(data.Parameters[0], response.Parameters[0])
-			utils.SendMessage(data.Connection, "sendData")
+			message.Command = "sendData"
+			utils.SendMessage(message)
 			readedBytes := utils.ReadData(data.Connection, buffer, logger)
 			block.Write(buffer[:readedBytes])
 		}

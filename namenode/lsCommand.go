@@ -6,16 +6,35 @@ import (
 
 func lsCommand(data utils.Message) {
 	metadataMutex.RLock()
-	response := readMetadataFiles(metadata)
+	filesList := readMetadataFiles(metadata)
 	metadataMutex.RUnlock()
 
-	utils.SendMessage(data.Connection, response)
+	message := getLsMessage(data, filesList)
+
+	utils.SendMessage(message)
 }
 
-func readMetadataFiles(metadata map[string][]Block) string {
-	response := "["
+func readMetadataFiles(metadata map[string][]Block) []string {
+	fileNames := make([]string, len(metadata))
+	i := 0
 	for fileName := range metadata {
-		response = response + fileName + ","
+		fileNames[i] = fileName
+		i++
 	}
-	return response[:len(response)-1] + "]"
+	return fileNames
+}
+
+func getLsMessage(data utils.Message, fileList []string) utils.Message {
+	var command string
+	if len(fileList) == 0 {
+		command = "nofiles"
+	} else {
+		command = "files"
+	}
+	message := utils.Message{
+		Connection: data.Connection,
+		Command:    command,
+		Parameters: fileList,
+	}
+	return message
 }

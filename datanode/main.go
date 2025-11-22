@@ -39,9 +39,6 @@ func handleConnection(conn net.Conn) {
 		commandReaded := commandsMap[message.Command]
 		if message.Command == "connection_ended" {
 			return
-		} else if commandReaded == nil {
-			logger.Printf("INFO: El cliente ingreso un comando invalido: \"%s\"", message.Command)
-			utils.SendMessage(conn, "El comando ingresado no es valido.\nIngrese uno de los siguientes comandos: store, read\n")
 		} else {
 			commandReaded(message)
 		}

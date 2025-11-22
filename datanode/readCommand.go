@@ -10,7 +10,11 @@ func readCommand(data utils.Message) {
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	buffer := make([]byte, 1024)
 	for range cantBlocks {
-		utils.SendMessage(data.Connection, "block")
+		message := utils.Message{
+			Connection: data.Connection,
+			Command:    "block",
+		}
+		utils.SendMessage(message)
 		response := utils.ReadMessage(data.Connection, logger)
 		if response.Command == "blockNum" {
 			fileName := getFullFileName(data.Parameters[0], response.Parameters[0])

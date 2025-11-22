@@ -2,16 +2,20 @@ package main
 
 import (
 	"dfs/utils"
-	"fmt"
 	"net"
 	"os"
+	"strconv"
 )
 
 func putCommand(data utils.Message) {
 	fileBlocks := divideFile(data)
 	namenodeConn, groupedAddresses := getFilePartsAddress(data, fileBlocks)
 	sendBlocksToDatanodes(data.Parameters[0], fileBlocks, groupedAddresses)
-	utils.SendMessage(namenodeConn, "confirm")
+	confirmMessage := utils.Message{
+		Connection: namenodeConn,
+		Command:    "confirm",
+	}
+	utils.SendMessage(confirmMessage)
 	namenodeConn.Close()
 }
 
@@ -37,8 +41,12 @@ func divideFile(data utils.Message) []FilePart {
 
 func getFilePartsAddress(data utils.Message, fileBlocks []FilePart) (net.Conn, map[string][]int) {
 	conn := connectToNode(namenode_ip)
-	message := fmt.Sprintf("put %s %d", data.Parameters[0], len(fileBlocks))
-	utils.SendMessage(conn, message)
+	message := utils.Message{
+		Connection: conn,
+		Command:    "put",
+		Parameters: []string{data.Parameters[0], strconv.Itoa(len(fileBlocks))},
+	}
+	utils.SendMessage(message)
 	response := utils.ReadMessage(conn, nil)
 	if response.Command == "addresses" {
 		assignAddressesToBlocks(fileBlocks, response.Parameters)
@@ -55,8 +63,13 @@ func assignAddressesToBlocks(blocks []FilePart, addresses []string) {
 func sendBlocksToDatanodes(fileName string, blocks []FilePart, groupedAddresses map[string][]int) {
 	for address, blocksIndexArray := range groupedAddresses {
 		conn := connectToNode(address)
-		message := fmt.Sprintf("store %s %d", fileName, len(blocksIndexArray))
-		utils.SendMessage(conn, message)
+		message := utils.Message{
+			Connection: conn,
+			Command:    "store",
+			Parameters: []string{fileName, strconv.Itoa(len(blocksIndexArray))},
+		}
+
+		utils.SendMessage(message)
 		sendBlocks(conn, blocks, blocksIndexArray)
 		conn.Close()
 	}
@@ -66,8 +79,12 @@ func sendBlocks(conn net.Conn, blocks []FilePart, blocksIndexArray []int) {
 	for _, blockIndex := range blocksIndexArray {
 		response := utils.ReadMessage(conn, nil)
 		if response.Command == "block" {
-			message := fmt.Sprintf("blockNum %d", blockIndex)
-			utils.SendMessage(conn, message)
+			message := utils.Message{
+				Connection: conn,
+				Command:    "blockNum",
+				Parameters: []string{strconv.Itoa(blockIndex)},
+			}
+			utils.SendMessage(message)
 			response = utils.ReadMessage(conn, nil)
 			if response.Command == "sendData" {
 				utils.SendData(conn, blocks[blockIndex-1].Data)
