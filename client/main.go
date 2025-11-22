@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var namenode_ip = "localhost:5000"
+const namenode_ip = "localhost:5000"
 
 func main() {
 	welcomeUser()

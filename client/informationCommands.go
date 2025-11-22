@@ -26,5 +26,34 @@ func lsCommand(data utils.Message) {
 	}
 }
 func infoCommand(data utils.Message) {
-	fmt.Print("Comando info")
+	if len(data.Parameters) < 1 || data.Parameters[0] == "" {
+		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
+		return
+	}
+	fileInfo := getFileInfo(data)
+	showFileInfo(fileInfo)
+}
+
+func getFileInfo(data utils.Message) []string {
+	conn := connectToNode(namenode_ip)
+	defer conn.Close()
+	message := utils.Message{
+		Connection: conn,
+		Command:    "get",
+		Parameters: data.Parameters,
+	}
+	utils.SendMessage(message)
+	response := utils.ReadMessage(conn, nil)
+	return response.Parameters
+}
+
+func showFileInfo(fileInfo []string) {
+	if len(fileInfo) == 0 {
+		fmt.Print("El archivo no se encuentra en el DFS.\n")
+	} else {
+		fmt.Print("Las partes del archivo esta en los siguientes nodos:\n")
+	}
+	for i, address := range fileInfo {
+		fmt.Printf("\t- Bloque %d: %s\n", i+1, address)
+	}
 }
