@@ -4,6 +4,7 @@
 
 data/
 blocks/
+downloads/
 namenode/namenode
 datanode/datanode
 client/client

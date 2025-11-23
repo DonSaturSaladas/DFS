@@ -4,6 +4,8 @@ import (
 	"dfs/utils"
 	"fmt"
 	"net"
+	"os"
+	"sort"
 	"strconv"
 )
 
@@ -34,6 +36,7 @@ func getCommand(data utils.Message) {
 	retrieveFileData(data, fileParts, groupedAddresses)
 	logger.Printf("INFO: Recibidos los bloques del archivo %s.\n", data.Parameters[0])
 	fmt.Print(len(fileParts))
+	saveFile(data.Parameters[0], fileParts)
 	for _, part := range fileParts {
 		fmt.Printf("Parte %d: %s", part.BlockNum, string(part.Data))
 	}
@@ -110,5 +113,41 @@ func retrieveFileData(data utils.Message, fileParts []FilePart, blockAddresses m
 			}
 		}
 	}
+}
 
+func saveFile(fileName string, fileParts []FilePart) {
+	sortFileParts(fileParts)
+	fileData := joinFileParts(fileParts)
+	writeDataToFile(fileName, fileData)
+}
+
+func sortFileParts(fileParts []FilePart) {
+	sort.Slice(fileParts, func(i, j int) bool {
+		return fileParts[i].BlockNum < fileParts[j].BlockNum
+	})
+}
+
+func joinFileParts(fileParts []FilePart) []byte {
+	var fileData []byte
+	for _, filePart := range fileParts {
+		fileData = append(fileData, filePart.Data...)
+	}
+	return fileData
+}
+
+func writeDataToFile(fileName string, fileData []byte) {
+	filePath := "downloads/" + fileName
+	file, err := os.Create(filePath)
+	if err != nil {
+		logger.Printf("ERROR: No se pudo crear el archivo \"%s\".\n", fileName)
+	} else {
+		logger.Printf("INFO: Archivo \"%s\" creado correctamente, escribiendo el contenido.\n", fileName)
+		_, err := file.Write(fileData)
+		if err != nil {
+			logger.Printf("ERROR: No se pudo escribir el contenido del archivo \"%s\", eliminando el archivo.\n", fileName)
+			os.Remove(filePath)
+		} else {
+			logger.Printf("INFO: El archivo \"%s\" fue guardado exitosamente.\n", fileName)
+		}
+	}
 }
