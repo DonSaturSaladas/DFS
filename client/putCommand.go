@@ -11,20 +11,31 @@ import (
 func putCommand(data utils.Message) {
 	if len(data.Parameters) < 1 || data.Parameters[0] == "" {
 		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
+		logger.Print("ERROR: Se ingreso el comando put sin el nombre del archivo.\n")
 		return
 	}
-	file, err := openFile(data.Parameters[0])
+	fileName := data.Parameters[0]
+	file, err := openFile(fileName)
 	defer file.Close()
+	logger.Printf("INFO: Abriendo el archivo \"%s\".\n", fileName)
 	if err {
 		return
 	}
+	logger.Printf("INFO: Archivo \"%s\" abierto correctamente.\n", fileName)
+	logger.Printf("INFO: Dividiendo el archivo \"%s\".\n", fileName)
 	fileBlocks := divideFile(file)
+	logger.Printf("INFO: El archivo \"%s\" se dividio en %d bloques.\n", fileName, len(fileBlocks))
+	logger.Printf("INFO: Solicitando las direcciones para guardar los bloques del archivo \"%s\".", fileName)
 	namenodeConn, groupedAddresses := getFilePartsAddress(data, fileBlocks)
-	sendBlocksToDatanodes(data.Parameters[0], fileBlocks, groupedAddresses)
+	logger.Printf("INFO: Obtenidas las direcciones para guardar los bloques del archivo \"%s\".", fileName)
+	logger.Printf("INFO: Enviando los bloques del archivo \"%s\" a los datanodes correspondientes.\n", fileName)
+	sendBlocksToDatanodes(fileName, fileBlocks, groupedAddresses)
+	logger.Printf("INFO: Bloques del archivo \"%s\" enviados.\n", fileName)
 	confirmMessage := utils.Message{
 		Connection: namenodeConn,
 		Command:    "confirm",
 	}
+	logger.Printf("INFO: Confirmando el envio de los bloques del archivo \"%s\" al namenode.\n", fileName)
 	confirmMessage.Send()
 	namenodeConn.Close()
 }
@@ -73,7 +84,8 @@ func getFilePartsAddress(data utils.Message, fileBlocks []FilePart) (net.Conn, m
 	if response.Command == "addresses" {
 		assignAddressesToBlocks(fileBlocks, response.Parameters)
 	}
-	return conn, groupAddresses(response.Parameters)
+	groupedAddresses := groupAddresses(data.Parameters[0], response.Parameters)
+	return conn, groupedAddresses
 }
 
 func assignAddressesToBlocks(blocks []FilePart, addresses []string) {
@@ -92,12 +104,13 @@ func sendBlocksToDatanodes(fileName string, blocks []FilePart, groupedAddresses 
 		}
 
 		message.Send()
-		sendBlocks(conn, blocks, blocksIndexArray)
+		logger.Printf("INFO: Enviando los bloques del archivo \"%s\" al nodo %s.\n", fileName, address)
+		sendBlocks(conn, fileName, blocks, blocksIndexArray)
 		conn.Close()
 	}
 }
 
-func sendBlocks(conn net.Conn, blocks []FilePart, blocksIndexArray []int) {
+func sendBlocks(conn net.Conn, fileName string, blocks []FilePart, blocksIndexArray []int) {
 	for _, blockIndex := range blocksIndexArray {
 		response := utils.ReadMessage(conn, nil)
 		if response.Command == "block" {
@@ -109,6 +122,7 @@ func sendBlocks(conn net.Conn, blocks []FilePart, blocksIndexArray []int) {
 			message.Send()
 			response = utils.ReadMessage(conn, nil)
 			if response.Command == "sendData" {
+				logger.Printf("INFO: Enviando el bloque %d del archivo \"%s\".\n", blockIndex, fileName)
 				utils.SendData(conn, blocks[blockIndex-1].Data)
 			}
 		}

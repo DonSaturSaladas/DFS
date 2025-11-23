@@ -12,9 +12,11 @@ func lsCommand(data utils.Message) {
 		Connection: conn,
 		Command:    "ls",
 	}
+	logger.Print("INFO: Solicitando la lista de archivos en el DFS al namenode.\n")
 	message.Send()
 	response := utils.ReadMessage(conn, nil)
 	if response.Command == "files" {
+		logger.Print("INFO: Mostrando los archivos del DFS al usuario.\n")
 		fmt.Printf("Archivos en el DFS:\n -")
 		for i, file := range response.Parameters {
 			fmt.Print(" " + file)
@@ -23,6 +25,9 @@ func lsCommand(data utils.Message) {
 			}
 		}
 		fmt.Print(".\n")
+	} else {
+		logger.Print("INFO: No hay archivos en el DFS para mostrar.")
+		fmt.Print("No hay ningun archivo en el DFS actualmente.\n")
 	}
 }
 func infoCommand(data utils.Message) {

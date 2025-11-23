@@ -16,6 +16,7 @@ type FilePart struct {
 func getCommand(data utils.Message) {
 	if len(data.Parameters) != 1 || data.Parameters[0] == "" {
 		fmt.Print("ERROR: Ingrese el nombre del archivo\n")
+		logger.Printf("ERROR: Se ingreso el comando get sin el nombre del archivo.\n")
 		return
 	}
 	logger.Printf("INFO: Solicitando al namenode la direccion de los bloques del archivo %s.\n", data.Parameters[0])
@@ -27,7 +28,7 @@ func getCommand(data utils.Message) {
 		return
 	}
 	logger.Printf("INFO: Mensaje con las direcciones de los bloques del archivo %s recibidas.\n", data.Parameters[0])
-	groupedAddresses := groupAddresses(blockAddresses.Parameters)
+	groupedAddresses := groupAddresses(data.Parameters[0], blockAddresses.Parameters)
 	fileParts := make([]FilePart, len(blockAddresses.Parameters))
 	logger.Printf("INFO: Solicitando los bloques del archivo %s.\n", data.Parameters[0])
 	retrieveFileData(data, fileParts, groupedAddresses)
@@ -66,11 +67,13 @@ func getFileBlocks(conn net.Conn, fileName string) utils.Message {
 	return response
 }
 
-func groupAddresses(blockAddresses []string) map[string][]int {
+func groupAddresses(fileName string, blockAddresses []string) map[string][]int {
+	logger.Printf("INFO: Agrupando los bloques del archivo \"%s\" por nodo.\n", fileName)
 	addressMap := map[string][]int{}
 	for blockNum, address := range blockAddresses {
 		addressMap[address] = append(addressMap[address], blockNum+1)
 	}
+	logger.Printf("INFO: Los bloques del archivo \"%s\" fueron agrupados correctamente.\n", fileName)
 	return addressMap
 }
 
