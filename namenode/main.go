@@ -57,6 +57,7 @@ func handleConnection(conn net.Conn) {
 		"get": getCommand,
 		"put": putCommand,
 		"ls":  lsCommand,
+		"rm":  rmCommand,
 	}
 
 	for {
