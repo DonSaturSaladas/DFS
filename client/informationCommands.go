@@ -17,14 +17,10 @@ func lsCommand(data utils.Message) {
 	response := utils.ReadMessage(conn, nil)
 	if response.Command == "files" {
 		logger.Print("INFO: Mostrando los archivos del DFS al usuario.\n")
-		fmt.Printf("Archivos en el DFS:\n -")
-		for i, file := range response.Parameters {
-			fmt.Print(" " + file)
-			if i != len(response.Parameters)-1 {
-				fmt.Print(",")
-			}
+		fmt.Printf("Archivos en el DFS:\n ")
+		for _, file := range response.Parameters {
+			fmt.Printf("\t- %s\n", file)
 		}
-		fmt.Print(".\n")
 	} else {
 		logger.Print("INFO: No hay archivos en el DFS para mostrar.")
 		fmt.Print("No hay ningun archivo en el DFS actualmente.\n")
