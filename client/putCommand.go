@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func putCommand(data utils.Message) {
@@ -14,9 +15,10 @@ func putCommand(data utils.Message) {
 		logger.Print("ERROR: Se ingreso el comando put sin el nombre del archivo.\n")
 		return
 	}
-	fileName := data.Parameters[0]
-	file, err := openFile(fileName)
+	file, err := openFile(data.Parameters[0])
 	defer file.Close()
+	fileName := getFileName(data.Parameters[0])
+	data.Parameters[0] = fileName
 	logger.Printf("INFO: Abriendo el archivo \"%s\".\n", fileName)
 	if err {
 		return
@@ -26,18 +28,29 @@ func putCommand(data utils.Message) {
 	fileBlocks := divideFile(file)
 	logger.Printf("INFO: El archivo \"%s\" se dividio en %d bloques.\n", fileName, len(fileBlocks))
 	logger.Printf("INFO: Solicitando las direcciones para guardar los bloques del archivo \"%s\".", fileName)
-	namenodeConn, groupedAddresses := getFilePartsAddress(data, fileBlocks)
-	logger.Printf("INFO: Obtenidas las direcciones para guardar los bloques del archivo \"%s\".", fileName)
+
+	response := getFilePartsAddress(data.Parameters[0], fileBlocks)
+	if response.Command == "addresses" {
+		logger.Printf("INFO: Obtenidas las direcciones para guardar los bloques del archivo \"%s\".", fileName)
+		assignAddressesToBlocks(fileBlocks, response.Parameters)
+	}
+	groupedAddresses := groupAddresses(data.Parameters[0], response.Parameters)
+
 	logger.Printf("INFO: Enviando los bloques del archivo \"%s\" a los datanodes correspondientes.\n", fileName)
 	sendBlocksToDatanodes(fileName, fileBlocks, groupedAddresses)
 	logger.Printf("INFO: Bloques del archivo \"%s\" enviados.\n", fileName)
 	confirmMessage := utils.Message{
-		Connection: namenodeConn,
+		Connection: response.Connection,
 		Command:    "confirm",
 	}
 	logger.Printf("INFO: Confirmando el envio de los bloques del archivo \"%s\" al namenode.\n", fileName)
 	confirmMessage.Send()
-	namenodeConn.Close()
+	confirmMessage.Connection.Close()
+}
+
+func getFileName(filePath string) string {
+	filePathParts := strings.Split(filePath, "/")
+	return filePathParts[len(filePathParts)-1]
 }
 
 func openFile(filePath string) (*os.File, bool) {
@@ -72,20 +85,15 @@ func divideFile(file *os.File) []FilePart {
 	return fileBlocks
 }
 
-func getFilePartsAddress(data utils.Message, fileBlocks []FilePart) (net.Conn, map[string][]int) {
+func getFilePartsAddress(fileName string, fileBlocks []FilePart) utils.Message {
 	conn := connectToNode(namenode_ip)
 	message := utils.Message{
 		Connection: conn,
 		Command:    "put",
-		Parameters: []string{data.Parameters[0], strconv.Itoa(len(fileBlocks))},
+		Parameters: []string{fileName, strconv.Itoa(len(fileBlocks))},
 	}
 	message.Send()
-	response := utils.ReadMessage(conn, nil)
-	if response.Command == "addresses" {
-		assignAddressesToBlocks(fileBlocks, response.Parameters)
-	}
-	groupedAddresses := groupAddresses(data.Parameters[0], response.Parameters)
-	return conn, groupedAddresses
+	return utils.ReadMessage(conn, logger)
 }
 
 func assignAddressesToBlocks(blocks []FilePart, addresses []string) {
