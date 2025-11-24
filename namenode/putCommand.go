@@ -11,12 +11,38 @@ import (
 )
 
 func putCommand(data utils.Message) {
+	if fileOnDFS(data.Parameters[0]) {
+		logger.Printf("INFO: Se hizo un put sobre el archivo \"%s\" que esta en el dfs, solicitando confirmacion de sobreescritura.\n", data.Parameters[0])
+		if !userWantsOverWriteFile(data.Connection) {
+			logger.Printf("INFO: El usuario no quiere sobreescribir el archivo \"%s\", abortando comando.\n", data.Parameters[0])
+			return
+		}
+		logger.Printf("INFO: El usuario confirmo la sobreescritura sobre el archivo \"%s\".\n", data.Parameters[0])
+		//removeFileData(data.Parameters[0])
+	}
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	if cantBlocks == -1 {
 		logger.Print("ERROR: No se pudo realizar la conversion de string a entero.\n")
 		return
 	}
 	assignBlocks(data)
+}
+
+func fileOnDFS(fileName string) bool {
+	metadataMutex.RLock()
+	fileOnDFS := metadata[fileName] != nil
+	metadataMutex.RUnlock()
+	return fileOnDFS
+}
+
+func userWantsOverWriteFile(conn net.Conn) bool {
+	overWriteMessage := utils.Message{
+		Connection: conn,
+		Command:    "overwrite",
+	}
+	overWriteMessage.Send()
+	overWriteResponse := utils.ReadMessage(conn, logger)
+	return overWriteResponse.Command == "confirm"
 }
 
 func getCantBlocks(blocks string) int {
@@ -91,8 +117,15 @@ func getPreAssignResponse(conn net.Conn) bool {
 
 func saveBlockUsageModifications(newBlocks []BlockInfo) {
 	systemInfo.BlockUsage = newBlocks
-	file, _ := os.Create("data/system_info.json")
-	jsonData, _ := json.MarshalIndent(systemInfo, "", "\t")
+	file, errCreate := os.Create("data/system_info.json")
+	if errCreate != nil {
+		panic(errCreate)
+	}
+	defer file.Close()
+	jsonData, errMarshal := json.MarshalIndent(systemInfo, "", "\t")
+	if errMarshal != nil {
+		panic(errMarshal)
+	}
 
 	file.Write(jsonData)
 }
