@@ -44,6 +44,7 @@ func getCommandsMap() map[string]func(utils.Message) {
 		"get":  getCommand,
 		"ls":   lsCommand,
 		"info": infoCommand,
+		"rm":   rmCommand,
 	}
 }
 
