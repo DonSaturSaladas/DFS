@@ -14,6 +14,7 @@ func rmCommand(data utils.Message) {
 	}
 	logger.Printf("INFO: Solicitando las direcciones de los bloques del archivo \"%s\" para eliminarlas.\n", data.Parameters[0])
 	response := getAddressesToRemove(data)
+	data.Connection = response.Connection
 	defer response.Connection.Close()
 	if response.Command == "addresses" {
 		logger.Printf("INFO: Se recibieron las direcciones para eliminar el archivo \"%s\".\n", data.Parameters[0])
@@ -32,7 +33,7 @@ func getAddressesToRemove(data utils.Message) utils.Message {
 		Parameters: data.Parameters,
 	}
 	message.Send()
-	return utils.ReadMessage(data.Connection, logger)
+	return utils.ReadMessage(namenodeConn, logger)
 }
 
 func removeBlocks(data utils.Message, addresses []string) {
@@ -57,9 +58,8 @@ func removeNodeBlocks(fileName string, blocksAddresses []string) {
 }
 
 func confirmDeletedBlocks(namenodeConn net.Conn) {
-	message := utils.Message{
+	utils.Message{
 		Connection: namenodeConn,
 		Command:    "confirm",
-	}
-	message.Send()
+	}.Send()
 }
