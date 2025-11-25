@@ -18,7 +18,7 @@ func putCommand(data utils.Message) {
 			return
 		}
 		logger.Printf("INFO: El usuario confirmo la sobreescritura sobre el archivo \"%s\".\n", data.Parameters[0])
-		//removeFileData(data.Parameters[0])
+		removeFileData(data.Parameters[0])
 	}
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	if cantBlocks == -1 {
