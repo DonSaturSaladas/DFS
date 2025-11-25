@@ -33,6 +33,7 @@ func handleConnection(conn net.Conn) {
 	commandsMap := map[string]func(utils.Message){
 		"store": storeCommand,
 		"read":  readCommand,
+		"rm":    rmCommand,
 	}
 
 	for {
