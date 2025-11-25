@@ -18,7 +18,7 @@ func rmCommand(data utils.Message) {
 	defer response.Connection.Close()
 	if response.Command == "addresses" {
 		logger.Printf("INFO: Se recibieron las direcciones para eliminar el archivo \"%s\".\n", data.Parameters[0])
-		removeBlocks(data, response.Parameters)
+		removeBlocks(data.Connection, data.Parameters[0], response.Parameters)
 	} else if response.Command == "nofile" {
 		logger.Printf("INFO: El archivo \"%s\" no se encuentra en el DFS", data.Parameters[0])
 		fmt.Printf("El archivo \"%s\" no se encuentra en el DFS.\n", data.Parameters[0])
@@ -36,11 +36,11 @@ func getAddressesToRemove(data utils.Message) utils.Message {
 	return utils.ReadMessage(namenodeConn, logger)
 }
 
-func removeBlocks(data utils.Message, addresses []string) {
-	logger.Printf("INFO: Eliminando los bloques del archivo \"%s\".\n", data.Parameters[0])
-	removeNodeBlocks(data.Parameters[0], addresses)
-	confirmDeletedBlocks(data.Connection)
-	logger.Printf("INFO: Se eliminaron los bloques del archivo \"%s\".\n", data.Parameters[0])
+func removeBlocks(conn net.Conn, fileName string, addresses []string) {
+	logger.Printf("INFO: Eliminando los bloques del archivo \"%s\".\n", fileName)
+	removeNodeBlocks(fileName, addresses)
+	confirmDeletedBlocks(conn)
+	logger.Printf("INFO: Se eliminaron los bloques del archivo \"%s\".\n", fileName)
 }
 
 func removeNodeBlocks(fileName string, blocksAddresses []string) {

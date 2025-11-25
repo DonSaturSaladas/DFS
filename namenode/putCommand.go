@@ -18,7 +18,15 @@ func putCommand(data utils.Message) {
 			return
 		}
 		logger.Printf("INFO: El usuario confirmo la sobreescritura sobre el archivo \"%s\".\n", data.Parameters[0])
-		removeFileData(data.Parameters[0])
+		utils.Message{
+			Connection: data.Connection,
+			Command:    "remove",
+			Parameters: getFileAddresses(data.Parameters[0]),
+		}.Send()
+		response := utils.ReadMessage(data.Connection, logger)
+		if response.Command == "confirm" {
+			removeFileData(data.Parameters[0])
+		}
 	}
 	cantBlocks := getCantBlocks(data.Parameters[1])
 	if cantBlocks == -1 {
@@ -94,7 +102,7 @@ func assignBlocks(data utils.Message) {
 		metadataMutex.Unlock()
 		fmt.Print("Lock de la metadata liberado\n")
 	} else {
-		systemInfoMutex.RUnlock()
+		systemInfoMutex.Unlock()
 		fmt.Print("Lock de la info del sistema liberado\n")
 	}
 }

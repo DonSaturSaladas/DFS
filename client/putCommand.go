@@ -46,7 +46,11 @@ func putCommand(data utils.Message) {
 			Connection: response.Connection,
 			Command:    "confirm",
 		}.Send()
-		response = utils.ReadMessage(response.Connection, logger)
+		removeResponse := utils.ReadMessage(response.Connection, logger)
+		if removeResponse.Command == "remove" {
+			removeBlocks(removeResponse.Connection, fileName, removeResponse.Parameters)
+			response = utils.ReadMessage(response.Connection, logger)
+		}
 	}
 	if response.Command == "addresses" {
 		logger.Printf("INFO: Obtenidas las direcciones para guardar los bloques del archivo \"%s\".", fileName)
