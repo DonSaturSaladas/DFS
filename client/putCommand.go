@@ -30,6 +30,24 @@ func putCommand(data utils.Message) {
 	logger.Printf("INFO: Solicitando las direcciones para guardar los bloques del archivo \"%s\".", fileName)
 
 	response := getFilePartsAddress(data.Parameters[0], fileBlocks)
+	if response.Command == "overwrite" {
+		logger.Printf("INFO: El archivo \"%s\" se encuentra en el DFS, solicitando confirmacion para sobreescribir.\n", fileName)
+		var userInput utils.Message
+		for userInput.Command != "y" && userInput.Command != "n" {
+			fmt.Printf("El archivo se encuentra en el DFS, desea sobreescribirlo? (y/n): ")
+			userInput = getUserInput()
+		}
+		if userInput.Command == "n" {
+			logger.Printf("INFO: El usuario rechazo la sobreescritura del archivo \"%s\".\n", fileName)
+			return
+		}
+		logger.Printf("INFO: El usuario acepto la sobreescritura del archivo \"%s\".\n", fileName)
+		utils.Message{
+			Connection: response.Connection,
+			Command:    "confirm",
+		}.Send()
+		response = utils.ReadMessage(response.Connection, logger)
+	}
 	if response.Command == "addresses" {
 		logger.Printf("INFO: Obtenidas las direcciones para guardar los bloques del archivo \"%s\".", fileName)
 		assignAddressesToBlocks(fileBlocks, response.Parameters)

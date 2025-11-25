@@ -15,6 +15,7 @@ func main() {
 	welcomeUser()
 	var userInput utils.Message
 	for userInput.Command != "exit" {
+		fmt.Print("\nIngrese un comando: ")
 		userInput = getUserInput()
 		commandsMap := getCommandsMap()
 		commandReaded := commandsMap[userInput.Command]
@@ -31,7 +32,6 @@ func main() {
 
 func getUserInput() utils.Message {
 	buffer := bufio.NewReader(os.Stdin)
-	fmt.Print("\nIngrese un comando: ")
 	logger.Print("INFO: Esperando un comando.")
 	commandReaded, _ := buffer.ReadString('\n')
 	message := utils.ParseMessageData(commandReaded)
