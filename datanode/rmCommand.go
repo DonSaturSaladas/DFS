@@ -9,10 +9,11 @@ import (
 func rmCommand(data utils.Message) {
 	fileName, fileExtension := getFileNameData(data.Parameters[0])
 	blocksEntries, _ := os.ReadDir("./blocks")
-
+	logger.Printf("INFO: Buscando bloques asociados al archivo \"%s\".\n", data.Parameters[0])
 	for _, entry := range blocksEntries {
 		entryName, entryExtension := getFileNameData(entry.Name())
 		if strings.Contains(entryName, fileName) && entryExtension == fileExtension {
+			logger.Printf("INFO: Se encontro un bloque asociado al archivo \"%s\", eliminando bloque.\n", data.Parameters[0])
 			removeFile(entry.Name())
 		}
 	}

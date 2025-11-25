@@ -2,14 +2,11 @@ package main
 
 import (
 	"dfs/utils"
-	"fmt"
 	"log"
 	"net"
-	"strconv"
 )
 
 var logger *log.Logger
-var puerto string //LOCALMENTE (borrar cuando este finalizado)
 
 func main() {
 	listener := startDatanode()
@@ -21,11 +18,8 @@ func main() {
 }
 
 func startDatanode() net.Listener {
-	fmt.Print("Ingresar el puerto del nodo: ")
-	fmt.Scan(&puerto)
-	port, _ := strconv.Atoi(puerto)
 	logger = utils.CreateLogger("DATANODE")
-	listener := utils.StartServer(port, logger)
+	listener := utils.StartServer(5000, logger)
 	return listener
 }
 
@@ -37,6 +31,7 @@ func handleConnection(conn net.Conn) {
 	}
 
 	for {
+		logger.Print("INFO: Esperando un comando.\n")
 		message := utils.ReadMessage(conn, logger)
 		commandReaded := commandsMap[message.Command]
 		if message.Command == "connection_ended" {
