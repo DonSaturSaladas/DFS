@@ -40,8 +40,10 @@ func handleConnection(conn net.Conn) {
 		message := utils.ReadMessage(conn, logger)
 		commandReaded := commandsMap[message.Command]
 		if message.Command == "connection_ended" {
+			logger.Print("INFO: Conexion finalizada, terminando hilo.\n")
 			return
 		} else {
+			logger.Printf("INFO: Comando recibido -> %s.\n", message.Command)
 			commandReaded(message)
 		}
 	}

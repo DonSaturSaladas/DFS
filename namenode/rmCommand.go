@@ -3,7 +3,6 @@ package main
 import (
 	"dfs/utils"
 	"encoding/json"
-	"fmt"
 	"net"
 	"os"
 	"slices"
@@ -14,14 +13,20 @@ func rmCommand(data utils.Message) {
 	logger.Printf("INFO: Buscando en el archivo de metadata los nodos que contienen al archivo \"%s\".\n", fileName)
 	addresses := getFileAddresses(fileName)
 	if len(addresses) == 0 {
+		logger.Printf("INFO: El archivo \"%s\" no existe en el DFS.\n", fileName)
 		noBlocksToRemove(data.Connection)
 		return
 	}
+	logger.Printf("INFO: El archivo \"%s\" esta en el DFS.\n", fileName)
+	logger.Printf("INFO: Enviando las direcciones de los nodos que tienen bloques a eliminar del archivo \"%s\".\n", fileName)
 	sendBlockAddressesToRemove(data.Connection, addresses)
+	logger.Printf("INFO: Esperando confirmacion de eliminacion de los bloques del archivo \"%s\".\n", fileName)
 	response := utils.ReadMessage(data.Connection, logger)
 	if response.Command == "confirm" {
-		fmt.Print("Confirmado\n")
+		logger.Printf("INFO: Se recibio confirmacion de la eliminacion de los bloques del archivo \"%s\".\n", fileName)
+		logger.Printf("INFO: Eliminando la informacion del sistema del archivo \"%s\".\n", fileName)
 		removeFileData(fileName)
+		logger.Printf("INFO: Informacion del archivo \"%s\" eliminada.\n", fileName)
 	}
 
 }
@@ -61,6 +66,7 @@ func removeFileData(fileName string) {
 }
 
 func removeFileFromMetadata(fileName string) []Block {
+	logger.Print("INFO: Solicitando mutex para escribir en el archivo \"metadata.json\".\n")
 	metadataMutex.Lock()
 	fileMetadata := metadata[fileName]
 	delete(metadata, fileName)
@@ -68,16 +74,19 @@ func removeFileFromMetadata(fileName string) []Block {
 	file, _ := os.Create("data/metadata.json")
 	file.Write(metadataContent)
 	metadataMutex.Unlock()
+	logger.Print("INFO: Liberado mutex de \"metadata.json\".\n")
 	return fileMetadata
 }
 
 func removeFileFromSystemInfo(fileMetadata []Block) {
 	nodeUsageInFile := getNodeUsageInFile(fileMetadata)
+	logger.Print("INFO: Solicitando mutex para escribir en el archivo \"system_info.json\".\n")
 	systemInfoMutex.Lock()
 	for nodeAddress, usageInFile := range nodeUsageInFile {
 		removeNodeUsage(nodeAddress, usageInFile)
 	}
 	systemInfoMutex.Unlock()
+	logger.Print("INFO: Liberado mutex de \"system_info.json\".\n")
 }
 
 func getNodeUsageInFile(fileMetadata []Block) map[string]int {

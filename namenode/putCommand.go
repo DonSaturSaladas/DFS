@@ -18,13 +18,16 @@ func putCommand(data utils.Message) {
 			return
 		}
 		logger.Printf("INFO: El usuario confirmo la sobreescritura sobre el archivo \"%s\".\n", data.Parameters[0])
+		logger.Print("INFO: Enviando al usuario las direcciones de los namenodes que contienen los bloques a eliminar del archivo que se desea sobreescribir.\n")
 		utils.Message{
 			Connection: data.Connection,
 			Command:    "remove",
 			Parameters: getFileAddresses(data.Parameters[0]),
 		}.Send()
+		logger.Print("INFO: Esperando confirmacion de la eliminacion de los bloques.\n")
 		response := utils.ReadMessage(data.Connection, logger)
 		if response.Command == "confirm" {
+			logger.Print("INFO: Se recibio la confirmacion de la eliminacion de los bloques, eliminando los metadatos asociados al archivo viejo.\n")
 			removeFileData(data.Parameters[0])
 		}
 	}
@@ -37,9 +40,12 @@ func putCommand(data utils.Message) {
 }
 
 func fileOnDFS(fileName string) bool {
+	logger.Print("INFO: Solicitando mutex para leer la informacion de \"metadata.json\".\n")
 	metadataMutex.RLock()
+	logger.Print("INFO: Obtenido mutex de \"metadata.json\".\n")
 	fileOnDFS := metadata[fileName] != nil
 	metadataMutex.RUnlock()
+	logger.Print("INFO: Liberado mutex de \"metadata.json\".\n")
 	return fileOnDFS
 }
 
@@ -63,12 +69,12 @@ func getCantBlocks(blocks string) int {
 
 func assignBlocks(data utils.Message) {
 	cantBlocks := getCantBlocks(data.Parameters[1])
-	fmt.Print("Solicitando el lock de la info del sistema\n")
+	logger.Print("INFO: Solicitando mutex para escribir el archivo \"system_info.json\".\n")
 	systemInfoMutex.Lock()
-	fmt.Print("Lock de la info del sistema obtenido\n")
+	logger.Print("INFO: Obtenido mutex de \"system_info.json\".\n")
+
 	orderedBlocks := make([]BlockInfo, len(systemInfo.BlockUsage))
 	copy(orderedBlocks, systemInfo.BlockUsage)
-
 	sort.Slice(orderedBlocks, func(i, j int) bool {
 		return orderedBlocks[i].Usage < orderedBlocks[j].Usage
 	})
@@ -79,6 +85,7 @@ func assignBlocks(data utils.Message) {
 		Parameters: make([]string, cantBlocks),
 	}
 
+	logger.Printf("INFO: Asignando nodos a los bloques del archivo \"%s\".\n", data.Parameters[0])
 	blocks := make([]Block, cantBlocks)
 	for i := 1; i <= cantBlocks; i++ {
 		response.Parameters[i-1] = orderedBlocks[0].Address
@@ -88,22 +95,29 @@ func assignBlocks(data utils.Message) {
 		}
 		incrementFirstElement(orderedBlocks)
 	}
+	logger.Printf("INFO: Enviando direcciones de los bloques del archivo \"%s\".\n", data.Parameters[0])
 	response.Send()
 
+	logger.Printf("INFO: Esperando confirmacion de que los bloques del archivo \"%s\" fueron guardados en los nodos.\n", data.Parameters[0])
 	blocksSaved := getPreAssignResponse(data.Connection)
 	if blocksSaved {
+		logger.Printf("INFO: Recibida confirmacion de que los bloques del archivo \"%s\" fueron guardados en los nodos.\n", data.Parameters[0])
+		logger.Printf("INFO: Guardando las modificaciones asociadas al archivo \"%s\" en el sistema.\n", data.Parameters[0])
 		saveBlockUsageModifications(orderedBlocks)
+
 		systemInfoMutex.Unlock()
-		fmt.Print("Lock de la info del sistema liberado\n")
-		fmt.Print("Solicitando el lock de la metadata\n")
+		logger.Print("INFO: Liberado mutex de \"system_info.json\".\n")
+		logger.Print("INFO: Solicitando mutex para escribir en el archivo \"metadata.json\".\n")
 		metadataMutex.Lock()
-		fmt.Print("Lock de la metadata obtenido\n")
+		logger.Print("INFO: Obtenido mutex de \"metadata.json\".\n")
+		logger.Printf("INFO: Agregando el archivo \"%s\" a la metadata del sistema.\n", data.Parameters[0])
 		addFileToMetadata(data.Parameters[0], blocks)
 		metadataMutex.Unlock()
-		fmt.Print("Lock de la metadata liberado\n")
+		logger.Print("INFO: Liberado mutex de \"metadata.json\".\n")
 	} else {
+		logger.Printf("INFO: No se guardaron los bloques del archivo \"%s\" descartando modificaciones realizadas.\n", data.Parameters[0])
 		systemInfoMutex.Unlock()
-		fmt.Print("Lock de la info del sistema liberado\n")
+		logger.Print("INFO: Liberado mutex de \"system_info.json\".\n")
 	}
 }
 

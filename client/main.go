@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-const namenode_ip = "localhost:5000"
+const namenode_ip = "172.23.69.237:5000"
 
 var logger = utils.CreateLogger("CLIENTE")
 
