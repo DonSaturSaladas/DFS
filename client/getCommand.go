@@ -35,11 +35,7 @@ func getCommand(data utils.Message) {
 	logger.Printf("INFO: Solicitando los bloques del archivo %s.\n", data.Parameters[0])
 	retrieveFileData(data, fileParts, groupedAddresses)
 	logger.Printf("INFO: Recibidos los bloques del archivo %s.\n", data.Parameters[0])
-	fmt.Print(len(fileParts))
 	saveFile(data.Parameters[0], fileParts)
-	for _, part := range fileParts {
-		fmt.Printf("Parte %d: %s", part.BlockNum, string(part.Data))
-	}
 }
 
 func getBlocksAdresses(fileName string) utils.Message {

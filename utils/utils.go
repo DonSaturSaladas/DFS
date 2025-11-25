@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -11,7 +12,7 @@ func CreateLogger(prefix string) *log.Logger {
 		panic("Ingrese un prefijo\n")
 	}
 	logFile := OpenFile("data/logs.log")
-	logger := log.New(logFile, fmt.Sprintf("[%s] ", prefix), log.Ldate|log.Ltime)
+	logger := log.New(io.MultiWriter(os.Stdout, logFile), fmt.Sprintf("[%s] ", prefix), log.Ldate|log.Ltime)
 	return logger
 }
 
